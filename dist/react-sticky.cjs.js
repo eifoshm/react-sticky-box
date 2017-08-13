@@ -16,6 +16,8 @@ var _inherits = _interopDefault(require("babel-runtime/helpers/inherits"));
 var React = _interopDefault(require("react"));
 var ResizeObserver = _interopDefault(require("resize-observer-polyfill"));
 
+var THROTTLE_TIMEOUT = 16;
+
 var offsetTill = function offsetTill(node, target) {
   var current = node;
   var offset = 0;
@@ -62,6 +64,9 @@ var StickyBox = (function(_React$Component) {
         _this.node = n;
         if (n) {
           _this.prevTimestamp = 0;
+          _this.stickyOffset = 0;
+          _this.prevStickyOffset = 0;
+          _this.prevUpdateFn = function() {};
           _this.scrollPane = window;
           _this.latestScrollY = window.scrollY;
           _this.scrollPane.addEventListener("scroll", _this.throttleScroll);
@@ -75,7 +80,7 @@ var StickyBox = (function(_React$Component) {
           _this.ron.observe(_this.node);
           _this.updateNode();
 
-          _this.initial();
+          _this.initial(0);
         } else {
           _this.scrollPane.removeEventListener("scroll", _this.throttleScroll);
           window.removeEventListener("resize", _this.getMeasurements);
@@ -107,21 +112,18 @@ var StickyBox = (function(_React$Component) {
       }),
       (_this.updateNode = function() {
         _this.nodeHeight = _this.node.getBoundingClientRect().height;
+        _this.update();
       }),
       (_this.throttleScroll = function() {
         var timestamp = +new Date();
-        if (timestamp - _this.prevTimestamp >= 16) {
+        if (timestamp - _this.prevTimestamp >= THROTTLE_TIMEOUT) {
           _this.handleScroll();
           _this.prevTimestamp = timestamp;
-        } else {
-          console.log("drop!");
         }
       }),
       (_this.handleScroll = function() {
-        console.log(_this.props.stickyOffset);
         var scrollY = window.scrollY;
-        if (scrollY === _this.latestScrollY) return;
-        if (_this.nodeHeight <= _this.viewPortHeight) {
+        if (_this.nodeHeight <= _this.viewPortHeight - _this.stickyOffset) {
           // Just make it sticky if node smaller than viewport
           _this.initial();
           return;
@@ -130,47 +132,16 @@ var StickyBox = (function(_React$Component) {
         if (scrollDelta > 0) {
           // scroll down
           if (_this.mode === "stickyTop") {
-            if (scrollY + _this.scrollPaneOffset > _this.naturalTop) {
-              _this.mode = "relative";
-              _this.node.style.position = "relative";
-              _this.offset = Math.max(
-                0,
-                _this.scrollPaneOffset + _this.latestScrollY - _this.naturalTop
-              );
-              _this.node.style.top = _this.offset + "px";
-            }
+            _this.updateDownStickyTop();
           } else if (_this.mode === "relative") {
-            if (
-              scrollY + _this.scrollPaneOffset + _this.viewPortHeight >
-              _this.naturalTop + _this.nodeHeight + _this.offset
-            ) {
-              _this.mode = "stickyBottom";
-              _this.node.style.position = stickyProp;
-              _this.node.style.top = _this.viewPortHeight - _this.nodeHeight + "px";
-            }
+            _this.updateDownRelative();
           }
         } else {
           // scroll up
           if (_this.mode === "stickyBottom") {
-            if (
-              _this.scrollPaneOffset + scrollY + _this.viewPortHeight <
-              _this.naturalTop + _this.parentHeight
-            ) {
-              _this.mode = "relative";
-              _this.node.style.position = "relative";
-              _this.offset =
-                _this.scrollPaneOffset +
-                _this.latestScrollY +
-                _this.viewPortHeight -
-                (_this.naturalTop + _this.nodeHeight);
-              _this.node.style.top = _this.offset + "px";
-            }
+            _this.updateUpStickyBottom();
           } else if (_this.mode === "relative") {
-            if (_this.scrollPaneOffset + scrollY < _this.naturalTop + _this.offset) {
-              _this.mode = "stickyTop";
-              _this.node.style.position = stickyProp;
-              _this.node.style.top = 0;
-            }
+            _this.updateUpRelative();
           }
         }
 
@@ -187,8 +158,92 @@ var StickyBox = (function(_React$Component) {
         if (this.mode !== "stickyTop") {
           this.mode = "stickyTop";
           this.node.style.position = stickyProp;
-          this.node.style.top = 0;
+          this.node.style.top = this.stickyOffset + "px";
         }
+      },
+    },
+    {
+      key: "updateDownStickyTop",
+      value: function updateDownStickyTop() {
+        var scrollY = window.scrollY;
+        if (scrollY + this.scrollPaneOffset + this.stickyOffset > this.naturalTop) {
+          this.mode = "relative";
+          this.node.style.position = "relative";
+          this.offset = Math.max(
+            0,
+            this.scrollPaneOffset + this.latestScrollY + this.stickyOffset - this.naturalTop
+          );
+          this.node.style.top = this.offset + "px";
+        }
+        this.prevUpdateFn = this.updateDownStickyTop;
+      },
+    },
+    {
+      key: "updateDownRelative",
+      value: function updateDownRelative() {
+        var scrollY = window.scrollY;
+        if (
+          scrollY + this.scrollPaneOffset + this.viewPortHeight >
+          this.naturalTop + this.nodeHeight + this.offset
+        ) {
+          this.mode = "stickyBottom";
+          this.node.style.position = stickyProp;
+          this.node.style.top = this.viewPortHeight - this.nodeHeight + "px";
+        }
+        this.prevUpdateFn = this.updateDownRelative;
+      },
+    },
+    {
+      key: "updateUpStickyBottom",
+      value: function updateUpStickyBottom() {
+        var scrollY = window.scrollY;
+        if (
+          this.scrollPaneOffset + scrollY + this.viewPortHeight <
+          this.naturalTop + this.parentHeight
+        ) {
+          this.mode = "relative";
+          this.node.style.position = "relative";
+          this.offset =
+            this.scrollPaneOffset +
+            this.latestScrollY +
+            this.viewPortHeight -
+            (this.naturalTop + this.nodeHeight);
+          this.node.style.top = this.offset + "px";
+        }
+        this.prevUpdateFn = this.updateUpStickyBottom;
+      },
+    },
+    {
+      key: "updateUpRelative",
+      value: function updateUpRelative() {
+        var scrollY = window.scrollY;
+        if (this.scrollPaneOffset + scrollY + this.stickyOffset < this.naturalTop + this.offset) {
+          this.mode = "stickyTop";
+          this.node.style.position = stickyProp;
+          this.node.style.top = this.stickyOffset + "px";
+        }
+        this.prevUpdateFn = this.updateUpRelative;
+      },
+    },
+    {
+      key: "removethis",
+      value: function removethis() {
+        var prevTop = parseInt(this.node.style.top, 10);
+        this.node.style.top = prevTop + this.stickyOffset - this.prevStickyOffset + "px";
+        this.prevStickyOffset = this.stickyOffset;
+      },
+    },
+    {
+      key: "updateStickyOffset",
+      value: function updateStickyOffset(stickyOffset) {
+        this.stickyOffset = stickyOffset;
+        this.prevUpdateFn();
+      },
+    },
+    {
+      key: "update",
+      value: function update() {
+        this.prevUpdateFn();
       },
     },
     {
@@ -216,9 +271,5 @@ var StickyBox = (function(_React$Component) {
 
   return StickyBox;
 })(React.Component);
-
-StickyBox.defaultProps = {
-  stickyOffset: 0,
-};
 
 module.exports = StickyBox;
