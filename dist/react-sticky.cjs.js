@@ -63,8 +63,7 @@ var StickyBox = (function(_React$Component) {
         if (n) {
           _this.prevTimestamp = 0;
           _this.scrollPane = window;
-          _this.latestScrollY =
-            _this.scrollPane === window ? window.scrollY : _this.scrollPane.scrollTop;
+          _this.latestScrollY = window.scrollY;
           _this.scrollPane.addEventListener("scroll", _this.throttleScroll);
           window.addEventListener("resize", _this.updateViewport);
           _this.updateViewport();
@@ -109,7 +108,7 @@ var StickyBox = (function(_React$Component) {
       (_this.updateNode = function() {
         _this.nodeHeight = _this.node.getBoundingClientRect().height;
       }),
-      (_this.trottleScroll = function() {
+      (_this.throttleScroll = function() {
         var timestamp = +new Date();
         if (timestamp - _this.prevTimestamp >= 32) {
           _this.handleScroll();
@@ -117,7 +116,7 @@ var StickyBox = (function(_React$Component) {
         }
       }),
       (_this.handleScroll = function() {
-        var scrollY = _this.scrollPane === window ? window.scrollY : _this.scrollPane.scrollTop;
+        var scrollY = window.scrollY;
         if (scrollY === _this.latestScrollY) return;
         if (_this.nodeHeight <= _this.viewPortHeight) {
           // Just make it sticky if node smaller than viewport

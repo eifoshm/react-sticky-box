@@ -24,7 +24,7 @@ export default class StickyBox extends React.Component {
     if (n) {
       this.prevTimestamp = 0;
       this.scrollPane = window;
-      this.latestScrollY = this.scrollPane === window ? window.scrollY : this.scrollPane.scrollTop;
+      this.latestScrollY = window.scrollY;
       this.scrollPane.addEventListener("scroll", this.throttleScroll);
       window.addEventListener("resize", this.updateViewport);
       this.updateViewport();
@@ -91,7 +91,7 @@ export default class StickyBox extends React.Component {
     this.nodeHeight = this.node.getBoundingClientRect().height;
   };
 
-  trottleScroll = () => {
+  throttleScroll = () => {
     const timestamp = +new Date();
     if (timestamp - this.prevTimestamp >= 32) {
       this.handleScroll();
@@ -100,7 +100,7 @@ export default class StickyBox extends React.Component {
   };
 
   handleScroll = () => {
-    const scrollY = this.scrollPane === window ? window.scrollY : this.scrollPane.scrollTop;
+    const scrollY = window.scrollY;
     if (scrollY === this.latestScrollY) return;
     if (this.nodeHeight <= this.viewPortHeight) {
       // Just make it sticky if node smaller than viewport
