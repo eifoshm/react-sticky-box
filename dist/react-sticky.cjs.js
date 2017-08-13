@@ -110,12 +110,15 @@ var StickyBox = (function(_React$Component) {
       }),
       (_this.throttleScroll = function() {
         var timestamp = +new Date();
-        if (timestamp - _this.prevTimestamp >= 32) {
+        if (timestamp - _this.prevTimestamp >= 16) {
           _this.handleScroll();
           _this.prevTimestamp = timestamp;
+        } else {
+          console.log("drop!");
         }
       }),
       (_this.handleScroll = function() {
+        console.log(_this.props.stickyOffset);
         var scrollY = window.scrollY;
         if (scrollY === _this.latestScrollY) return;
         if (_this.nodeHeight <= _this.viewPortHeight) {
@@ -181,21 +184,17 @@ var StickyBox = (function(_React$Component) {
     {
       key: "initial",
       value: function initial() {
-        var bottom = this.props.bottom;
-
-        if (bottom) {
-          if (this.mode !== "stickyBottom") {
-            this.mode = "stickyBottom";
-            this.node.style.position = stickyProp;
-            this.node.style.top = this.viewPortHeight - this.nodeHeight + "px";
-          }
-        } else {
-          if (this.mode !== "stickyTop") {
-            this.mode = "stickyTop";
-            this.node.style.position = stickyProp;
-            this.node.style.top = 0;
-          }
+        if (this.mode !== "stickyTop") {
+          this.mode = "stickyTop";
+          this.node.style.position = stickyProp;
+          this.node.style.top = 0;
         }
+      },
+    },
+    {
+      key: "shouldComponentUpdate",
+      value: function shouldComponentUpdate(nextProps) {
+        return this.props.children !== nextProps.children;
       },
     },
     {
@@ -217,5 +216,9 @@ var StickyBox = (function(_React$Component) {
 
   return StickyBox;
 })(React.Component);
+
+StickyBox.defaultProps = {
+  stickyOffset: 0,
+};
 
 module.exports = StickyBox;

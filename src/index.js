@@ -18,6 +18,9 @@ if (window.CSS && window.CSS.supports) {
 }
 
 export default class StickyBox extends React.Component {
+  static defaultProps = {
+    stickyOffset: 0,
+  };
   registerContainerRef = n => {
     if (!stickyProp) return;
     this.node = n;
@@ -47,19 +50,10 @@ export default class StickyBox extends React.Component {
   };
 
   initial() {
-    const {bottom} = this.props;
-    if (bottom) {
-      if (this.mode !== "stickyBottom") {
-        this.mode = "stickyBottom";
-        this.node.style.position = stickyProp;
-        this.node.style.top = `${this.viewPortHeight - this.nodeHeight}px`;
-      }
-    } else {
-      if (this.mode !== "stickyTop") {
-        this.mode = "stickyTop";
-        this.node.style.position = stickyProp;
-        this.node.style.top = 0;
-      }
+    if (this.mode !== "stickyTop") {
+      this.mode = "stickyTop";
+      this.node.style.position = stickyProp;
+      this.node.style.top = 0;
     }
   }
 
@@ -93,13 +87,16 @@ export default class StickyBox extends React.Component {
 
   throttleScroll = () => {
     const timestamp = +new Date();
-    if (timestamp - this.prevTimestamp >= 32) {
+    if (timestamp - this.prevTimestamp >= 16) {
       this.handleScroll();
       this.prevTimestamp = timestamp;
+    } else {
+      console.log("drop!");
     }
   };
 
   handleScroll = () => {
+    console.log(this.props.stickyOffset);
     const scrollY = window.scrollY;
     if (scrollY === this.latestScrollY) return;
     if (this.nodeHeight <= this.viewPortHeight) {
@@ -154,6 +151,10 @@ export default class StickyBox extends React.Component {
 
     this.latestScrollY = scrollY;
   };
+
+  shouldComponentUpdate(nextProps) {
+    return this.props.children !== nextProps.children;
+  }
 
   render() {
     const {children, className, style} = this.props;
