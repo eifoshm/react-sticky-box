@@ -1,15 +1,6 @@
 import React from "react";
 import ResizeObserver from "resize-observer-polyfill";
 
-const getScrollParent = node => {
-  let offsetParent = node;
-  while ((offsetParent = offsetParent.offsetParent)) {
-    const overflowYVal = getComputedStyle(offsetParent, null).getPropertyValue("overflow-y");
-    if (overflowYVal === "auto" || overflowYVal === "scroll") return offsetParent;
-  }
-  return window;
-};
-
 const offsetTill = (node, target) => {
   let current = node;
   let offset = 0;
@@ -31,18 +22,12 @@ export default class StickyBox extends React.Component {
     if (!stickyProp) return;
     this.node = n;
     if (n) {
-      this.scrollPane = getScrollParent(this.node);
+      this.prevTimestamp = 0;
+      this.scrollPane = window;
       this.latestScrollY = this.scrollPane === window ? window.scrollY : this.scrollPane.scrollTop;
-      this.scrollPane.addEventListener("scroll", this.handleScroll);
-      this.scrollPane.addEventListener("mousewheel", this.handleScroll);
-      if (this.scrollPane === window) {
-        window.addEventListener("resize", this.updateViewport);
-        this.updateViewport();
-      } else {
-        this.rosp = new ResizeObserver(this.updateScrollPane);
-        this.rosp.observe(this.scrollPane);
-        this.updateScrollPane();
-      }
+      this.scrollPane.addEventListener("scroll", this.throttleScroll);
+      window.addEventListener("resize", this.updateViewport);
+      this.updateViewport();
       this.ropn = new ResizeObserver(this.updateParentNode);
       this.ropn.observe(this.node.parentNode);
       this.updateParentNode();
@@ -53,13 +38,8 @@ export default class StickyBox extends React.Component {
 
       this.initial();
     } else {
-      this.scrollPane.removeEventListener("mousewheel", this.handleScroll);
-      this.scrollPane.removeEventListener("scroll", this.handleScroll);
-      if (this.scrollPane === window) {
-        window.removeEventListener("resize", this.getMeasurements);
-      } else {
-        this.rosp.disconnect();
-      }
+      this.scrollPane.removeEventListener("scroll", this.throttleScroll);
+      window.removeEventListener("resize", this.getMeasurements);
       this.ropn.disconnect();
       this.ron.disconnect();
       this.scrollPane = null;
@@ -109,6 +89,14 @@ export default class StickyBox extends React.Component {
 
   updateNode = () => {
     this.nodeHeight = this.node.getBoundingClientRect().height;
+  };
+
+  trottleScroll = () => {
+    const timestamp = +new Date();
+    if (timestamp - this.prevTimestamp >= 32) {
+      this.handleScroll();
+      this.prevTimestamp = timestamp;
+    }
   };
 
   handleScroll = () => {
