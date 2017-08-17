@@ -14,7 +14,7 @@ const offsetTill = (node, target) => {
 };
 
 let stickyProp = null;
-if (window.CSS && window.CSS.supports) {
+if (window && window.CSS && window.CSS.supports) {
   if (window.CSS.supports("position", "sticky")) stickyProp = "sticky";
   else if (window.CSS.supports("position", "-webkit-sticky")) stickyProp = "-webkit-sticky";
 }
@@ -178,15 +178,12 @@ export default class StickyBox extends React.Component {
     this.prevUpdateFn = this.updateUpRelative;
   }
 
-  removethis() {
+  updateStickyOffset(stickyOffset) {
+    this.stickyOffset = stickyOffset;
     const prevTop = parseInt(this.node.style.top, 10);
     this.node.style.top = `${prevTop + this.stickyOffset - this.prevStickyOffset}px`;
     this.prevStickyOffset = this.stickyOffset;
-  }
-
-  updateStickyOffset(stickyOffset) {
-    this.stickyOffset = stickyOffset;
-    this.prevUpdateFn();
+    this.update();
   }
 
   update() {

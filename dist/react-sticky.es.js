@@ -19,7 +19,7 @@ var offsetTill = function offsetTill(node, target) {
 };
 
 var stickyProp = null;
-if (window.CSS && window.CSS.supports) {
+if (window && window.CSS && window.CSS.supports) {
   if (window.CSS.supports("position", "sticky")) stickyProp = "sticky";
   else if (window.CSS.supports("position", "-webkit-sticky")) stickyProp = "-webkit-sticky";
 }
@@ -216,18 +216,13 @@ var StickyBox = (function(_React$Component) {
       },
     },
     {
-      key: "removethis",
-      value: function removethis() {
-        var prevTop = parseInt(this.node.style.top, 10);
-        this.node.style.top = prevTop + this.stickyOffset - this.prevStickyOffset + "px";
-        this.prevStickyOffset = this.stickyOffset;
-      },
-    },
-    {
       key: "updateStickyOffset",
       value: function updateStickyOffset(stickyOffset) {
         this.stickyOffset = stickyOffset;
-        this.prevUpdateFn();
+        var prevTop = parseInt(this.node.style.top, 10);
+        this.node.style.top = prevTop + this.stickyOffset - this.prevStickyOffset + "px";
+        this.prevStickyOffset = this.stickyOffset;
+        this.update();
       },
     },
     {
