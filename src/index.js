@@ -57,6 +57,7 @@ export default class StickyBox extends React.Component {
       this.node.style.position = stickyProp;
       this.node.style.top = `${this.stickyOffset}px`;
     }
+    this.latestScrollY = window.scrollY;
   }
 
   updateViewport = () => {
@@ -104,6 +105,7 @@ export default class StickyBox extends React.Component {
       return;
     }
     const scrollDelta = scrollY - this.latestScrollY;
+    this.latestScrollY = scrollY;
     if (scrollDelta > 0) {
       // scroll down
       if (this.mode === "stickyTop") {
@@ -119,10 +121,7 @@ export default class StickyBox extends React.Component {
         this.updateUpRelative();
       }
     }
-
-    this.latestScrollY = scrollY;
   };
-
   updateDownStickyTop() {
     const scrollY = window.scrollY;
     if (scrollY + this.scrollPaneOffset + this.stickyOffset > this.naturalTop) {
