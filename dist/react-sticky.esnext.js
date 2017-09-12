@@ -87,7 +87,6 @@ class StickyBox extends React.Component {
         return;
       }
       const scrollDelta = scrollY - this.latestScrollY;
-      this.latestScrollY = scrollY;
       if (scrollDelta > 0) {
         // scroll down
         if (this.mode === "stickyTop") {
@@ -103,6 +102,7 @@ class StickyBox extends React.Component {
           this.updateUpRelative();
         }
       }
+      this.latestScrollY = scrollY;
     }), _temp;
   }
 

@@ -129,7 +129,6 @@ var StickyBox = (function(_React$Component) {
           return;
         }
         var scrollDelta = scrollY - _this.latestScrollY;
-        _this.latestScrollY = scrollY;
         if (scrollDelta > 0) {
           // scroll down
           if (_this.mode === "stickyTop") {
@@ -145,6 +144,7 @@ var StickyBox = (function(_React$Component) {
             _this.updateUpRelative();
           }
         }
+        _this.latestScrollY = scrollY;
       }),
       _temp
     )), _possibleConstructorReturn(_this, _ret);
